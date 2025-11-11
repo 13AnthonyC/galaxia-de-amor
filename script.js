@@ -9,34 +9,60 @@ const palabras = [
   "mi reina", "mi tesoro", "mi cielo", "corazón", "mi luz", "mi todo"
 ];
 
+// Creamos muchas "estrellas-palabras" en espiral
 const estrellas = [];
+const numEstrellas = 1200;
+const centroX = canvas.width / 2;
+const centroY = canvas.height / 2;
 
-for (let i = 0; i < 700; i++) {
+for (let i = 0; i < numEstrellas; i++) {
+  const angulo = i * 0.25;
+  const radio = 0.5 * Math.sqrt(i) * 8;
+  const x = centroX + Math.cos(angulo) * radio;
+  const y = centroY + Math.sin(angulo) * radio;
+
   estrellas.push({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height,
-    size: Math.random() * 1.5,
-    vel: 0.2 + Math.random() * 0.8,
+    x,
+    y,
+    size: Math.random() * 1.5 + 0.5,
     palabra: palabras[Math.floor(Math.random() * palabras.length)],
-    color: `hsl(${Math.random() * 360}, 80%, 80%)`
+    color: `hsl(${Math.random() * 360}, 90%, 80%)`,
+    angleOffset: angulo
   });
 }
 
+let rotacion = 0;
+
 function animar() {
-  ctx.fillStyle = "rgba(0, 0, 20, 0.2)";
+  ctx.fillStyle = "rgba(0, 0, 15, 0.25)";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-  estrellas.forEach(e => {
-    ctx.fillStyle = e.color;
-    ctx.font = `${10 + e.size * 8}px cursive`;
-    ctx.fillText(e.palabra, e.x, e.y);
+  rotacion += 0.001;
 
-    e.y -= e.vel;
-    if (e.y < -20) {
-      e.y = canvas.height + 20;
-      e.x = Math.random() * canvas.width;
-    }
+  estrellas.forEach(e => {
+    const a = e.angleOffset + rotacion;
+    const r = Math.sqrt((e.x - centroX) ** 2 + (e.y - centroY) ** 2);
+
+    const x = centroX + Math.cos(a) * r;
+    const y = centroY + Math.sin(a) * r;
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(a / 2);
+    ctx.fillStyle = e.color;
+    ctx.font = `${8 + e.size * 10}px cursive`;
+    ctx.fillText(e.palabra, 0, 0);
+    ctx.restore();
   });
+
+  // Luz central (el "sol del amor")
+  const gradiente = ctx.createRadialGradient(centroX, centroY, 0, centroX, centroY, 200);
+  gradiente.addColorStop(0, "rgba(255,215,0,0.8)");
+  gradiente.addColorStop(1, "rgba(255,140,0,0)");
+  ctx.fillStyle = gradiente;
+  ctx.beginPath();
+  ctx.arc(centroX, centroY, 200, 0, Math.PI * 2);
+  ctx.fill();
 
   requestAnimationFrame(animar);
 }
