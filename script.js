@@ -1,80 +1,91 @@
-// --- Galaxia de Amor ---
-// Creado por Anthony para Sofía 💖
+// 💖 Galaxia de Amor - creada por Anthony para Sofía 💫
 
-// Cargar librería Three.js desde CDN
-import('https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.module.js').then(THREE => {
-  const { Scene, PerspectiveCamera, WebGLRenderer, TextureLoader, PointsMaterial, BufferGeometry, Points, Vector3, FontLoader, TextGeometry, MeshBasicMaterial, Mesh, AdditiveBlending, Color } = THREE;
+// Configuración básica
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.body.appendChild(renderer.domElement);
 
-  // Crear escena
-  const scene = new Scene();
-  const camera = new PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-  const renderer = new WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.body.style.margin = '0';
-  document.body.style.overflow = 'hidden';
-  document.body.appendChild(renderer.domElement);
+camera.position.z = 500;
 
-  // Palabras románticas 💕
-  const palabras = [
-    "Te amo", "Princesa", "Colochita", "Hermosa", "Preciosa", "Linda",
-    "Bella", "Guapa", "Mi vida", "Mi mundo", "Te quiero", "Te necesito",
-    "Bonita", "Mi sol", "Mi reina", "Encanto", "Cielo", "Tesoro", "Amor",
-    "Mi corazón", "Mi razón", "Mi todo", "Mi luz", "Amorcito"
-  ];
+// Palabras románticas que serán las "estrellas"
+const palabras = [
+  "Te amo", "Princesa", "Colochita", "Hermosa", "Preciosa", "Linda",
+  "Bella", "Guapa", "Mi vida", "Mi mundo", "Te quiero", "Te necesito",
+  "Bonita", "Mi sol", "Mi reina", "Encanto", "Cielo", "Tesoro", "Amor",
+  "Mi corazón", "Mi razón", "Mi todo", "Mi luz", "Amorcito"
+];
 
-  // Crear partículas como texto flotante
-  const loader = new FontLoader();
-  loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-    const numPalabras = 800;
-    for (let i = 0; i < numPalabras; i++) {
-      const texto = palabras[Math.floor(Math.random() * palabras.length)];
-      const geometry = new TextGeometry(texto, {
-        font: font,
-        size: Math.random() * 2 + 1,
-        height: 0.1,
-      });
-      const color = new Color().setHSL(Math.random(), 0.8, 0.8);
-      const material = new MeshBasicMaterial({ color, transparent: true, opacity: 0.8 });
-      const mesh = new Mesh(geometry, material);
+// Cargar fuente y crear estrellas-palabras
+const loader = new THREE.FontLoader();
+loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
 
-      const radius = Math.random() * 400 - 200;
-      const theta = Math.random() * 2 * Math.PI;
-      const phi = Math.random() * Math.PI;
+  const grupo = new THREE.Group();
+  scene.add(grupo);
 
-      mesh.position.set(
-        radius * Math.sin(phi) * Math.cos(theta),
-        radius * Math.sin(phi) * Math.sin(theta),
-        radius * Math.cos(phi)
-      );
-
-      scene.add(mesh);
-    }
-
-    // Texto central: Sofía 💖
-    const geoCentro = new TextGeometry("Sofía, amor de mi vida, te amo", {
+  for (let i = 0; i < 1000; i++) {
+    const texto = palabras[Math.floor(Math.random() * palabras.length)];
+    const geometry = new THREE.TextGeometry(texto, {
       font: font,
-      size: 10,
-      height: 1,
+      size: Math.random() * 2 + 1,
+      height: 0.1,
     });
-    const matCentro = new MeshBasicMaterial({ color: 0xffaaff });
-    const centro = new Mesh(geoCentro, matCentro);
-    centro.position.set(-80, 0, 0);
-    scene.add(centro);
+
+    const color = new THREE.Color().setHSL(Math.random(), 0.8, 0.8);
+    const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.8 });
+    const mesh = new THREE.Mesh(geometry, material);
+
+    const radius = Math.random() * 400 - 200;
+    const theta = Math.random() * 2 * Math.PI;
+    const phi = Math.random() * Math.PI;
+
+    mesh.position.set(
+      radius * Math.sin(phi) * Math.cos(theta),
+      radius * Math.sin(phi) * Math.sin(theta),
+      radius * Math.cos(phi)
+    );
+
+    mesh.userData = { baseScale: mesh.scale.clone() };
+    grupo.add(mesh);
+  }
+
+  // Texto central: Sofía, amor de mi vida 💗
+  const geoCentro = new THREE.TextGeometry("Sofía, amor de mi vida, te amo", {
+    font: font,
+    size: 10,
+    height: 1,
   });
+  const matCentro = new THREE.MeshBasicMaterial({ color: 0xff66cc });
+  const centro = new THREE.Mesh(geoCentro, matCentro);
+  centro.position.set(-80, 0, 0);
+  grupo.add(centro);
 
-  camera.position.z = 500;
-
-  // Animación suave de rotación
+  // Animación
   function animate() {
     requestAnimationFrame(animate);
-    scene.rotation.y += 0.0008;
-    scene.rotation.x += 0.0003;
+    grupo.rotation.y += 0.0008;
+    grupo.rotation.x += 0.0003;
     renderer.render(scene, camera);
   }
 
-  // Control de zoom con scroll
+  animate();
+
+  // Zoom suave
   window.addEventListener('wheel', (e) => {
     camera.position.z += e.deltaY * 0.3;
+    camera.position.z = Math.max(100, Math.min(1000, camera.position.z));
+  });
+
+  // Efecto de clic: cambio de color y tamaño
+  window.addEventListener('click', () => {
+    grupo.children.forEach(obj => {
+      if (obj.material) {
+        obj.material.color.setHSL(Math.random(), 0.8, 0.8);
+        const s = 0.5 + Math.random() * 1.5;
+        obj.scale.set(s, s, s);
+      }
+    });
   });
 
   // Redimensionar
@@ -83,8 +94,4 @@ import('https://cdn.jsdelivr.net/npm/three@0.159.0/build/three.module.js').then(
     camera.updateProjectionMatrix();
     renderer.setSize(window.innerWidth, window.innerHeight);
   });
-
-  animate();
 });
-
-
