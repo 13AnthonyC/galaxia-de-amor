@@ -1,75 +1,88 @@
-const canvas = document.getElementById("galaxia");
-const ctx = canvas.getContext("2d");
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+let scene, camera, renderer;
+const container = document.getElementById("container");
+
+scene = new THREE.Scene();
+camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+camera.position.z = 150;
+
+renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+container.appendChild(renderer.domElement);
+
+// Luz central (el “sol”)
+const light = new THREE.PointLight(0xffcc66, 2, 500);
+light.position.set(0, 0, 0);
+scene.add(light);
 
 const palabras = [
-  "te amo", "princesa", "colochita", "hermosa", "preciosa", "linda", "bella",
-  "guapa", "te quiero", "te necesito", "mi vida", "mi mundo", "mi amor",
-  "mi reina", "mi tesoro", "mi cielo", "corazón", "mi luz", "mi todo"
+  "te amo", "princesa", "colochita", "hermosa", "preciosa", "linda", "bella", "guapa",
+  "te quiero", "te necesito", "mi vida", "mi mundo", "mi amor", "mi reina", "mi tesoro",
+  "mi cielo", "corazón", "mi luz", "mi todo", "mi razón", "solo tú", "mi estrella"
 ];
 
-// Creamos muchas "estrellas-palabras" en espiral
-const estrellas = [];
-const numEstrellas = 1200;
-const centroX = canvas.width / 2;
-const centroY = canvas.height / 2;
+// Crear partículas de palabras
+const loader = new THREE.TextureLoader();
+const particleMaterial = new THREE.SpriteMaterial({
+  map: loader.load("https://threejsfundamentals.org/threejs/resources/images/disc.png"),
+  color: 0xffffff
+});
 
-for (let i = 0; i < numEstrellas; i++) {
-  const angulo = i * 0.25;
-  const radio = 0.5 * Math.sqrt(i) * 8;
-  const x = centroX + Math.cos(angulo) * radio;
-  const y = centroY + Math.sin(angulo) * radio;
+for (let i = 0; i < 800; i++) {
+  const angle = Math.random() * Math.PI * 2;
+  const radius = 50 + Math.random() * 200;
+  const y = (Math.random() - 0.5) * 150;
 
-  estrellas.push({
-    x,
+  const sprite = new THREE.Sprite(particleMaterial);
+  sprite.position.set(
+    Math.cos(angle) * radius,
     y,
-    size: Math.random() * 1.5 + 0.5,
-    palabra: palabras[Math.floor(Math.random() * palabras.length)],
-    color: `hsl(${Math.random() * 360}, 90%, 80%)`,
-    angleOffset: angulo
-  });
+    Math.sin(angle) * radius
+  );
+  sprite.scale.set(0.8, 0.8, 0.8);
+  scene.add(sprite);
+
+  // Crear una palabra flotante
+  const div = document.createElement("div");
+  div.style.position = "absolute";
+  div.style.color = `hsl(${Math.random() * 360}, 80%, 70%)`;
+  div.style.fontSize = "14px";
+  div.style.fontFamily = "cursive";
+  div.textContent = palabras[Math.floor(Math.random() * palabras.length)];
+  const label = new THREE.CSS2DObject(div);
+  label.position.copy(sprite.position);
+  sprite.add(label);
 }
 
-let rotacion = 0;
+// Texto central (el “sol del amor”)
+const div = document.createElement("div");
+div.innerHTML = "Sofía 💖 Amor de mi vida";
+div.style.fontSize = "28px";
+div.style.color = "#ffd700";
+div.style.textShadow = "0 0 10px #ffcc00, 0 0 30px #ff6600";
+div.style.fontFamily = "Segoe Script, cursive";
+const labelCentral = new THREE.CSS2DObject(div);
+scene.add(labelCentral);
 
-function animar() {
-  ctx.fillStyle = "rgba(0, 0, 15, 0.25)";
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
+const cssRenderer = new THREE.CSS2DRenderer();
+cssRenderer.setSize(window.innerWidth, window.innerHeight);
+cssRenderer.domElement.style.position = "absolute";
+cssRenderer.domElement.style.top = "0";
+container.appendChild(cssRenderer.domElement);
 
-  rotacion += 0.001;
-
-  estrellas.forEach(e => {
-    const a = e.angleOffset + rotacion;
-    const r = Math.sqrt((e.x - centroX) ** 2 + (e.y - centroY) ** 2);
-
-    const x = centroX + Math.cos(a) * r;
-    const y = centroY + Math.sin(a) * r;
-
-    ctx.save();
-    ctx.translate(x, y);
-    ctx.rotate(a / 2);
-    ctx.fillStyle = e.color;
-    ctx.font = `${8 + e.size * 10}px cursive`;
-    ctx.fillText(e.palabra, 0, 0);
-    ctx.restore();
-  });
-
-  // Luz central (el "sol del amor")
-  const gradiente = ctx.createRadialGradient(centroX, centroY, 0, centroX, centroY, 200);
-  gradiente.addColorStop(0, "rgba(255,215,0,0.8)");
-  gradiente.addColorStop(1, "rgba(255,140,0,0)");
-  ctx.fillStyle = gradiente;
-  ctx.beginPath();
-  ctx.arc(centroX, centroY, 200, 0, Math.PI * 2);
-  ctx.fill();
-
-  requestAnimationFrame(animar);
+// Animación
+function animate() {
+  requestAnimationFrame(animate);
+  scene.rotation.y += 0.0015;
+  scene.rotation.x += 0.0003;
+  renderer.render(scene, camera);
+  cssRenderer.render(scene, camera);
 }
 
-animar();
+animate();
 
 window.addEventListener("resize", () => {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  cssRenderer.setSize(window.innerWidth, window.innerHeight);
 });
