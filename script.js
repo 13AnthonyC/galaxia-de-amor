@@ -1,32 +1,29 @@
-import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js';
-import { OrbitControls } from 'https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+// Galaxia de Amor 3D para Sofía 💖
+let scene = new THREE.Scene();
+let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+let renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setSize(window.innerWidth, window.innerHeight);
+document.getElementById("contenedor").appendChild(renderer.domElement);
 
-let escena = new THREE.Scene();
-let camara = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-let renderizador = new THREE.WebGLRenderer({ antialias: true });
-renderizador.setSize(window.innerWidth, window.innerHeight);
-document.getElementById("contenedor").appendChild(renderizador.domElement);
+// Fondo de estrellas
+let starGeometry = new THREE.BufferGeometry();
+let starCount = 2000;
+let starPositions = [];
 
-// Fondo estrellado
-let geometriaEstrellas = new THREE.BufferGeometry();
-let cantidadEstrellas = 2000;
-let posiciones = [];
-
-for (let i = 0; i < cantidadEstrellas; i++) {
-  posiciones.push((Math.random() - 0.5) * 2000);
-  posiciones.push((Math.random() - 0.5) * 2000);
-  posiciones.push((Math.random() - 0.5) * 2000);
+for (let i = 0; i < starCount; i++) {
+  starPositions.push((Math.random() - 0.5) * 2000);
+  starPositions.push((Math.random() - 0.5) * 2000);
+  starPositions.push((Math.random() - 0.5) * 2000);
 }
+starGeometry.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
+let starMaterial = new THREE.PointsMaterial({ color: 0xff66cc, size: 2 });
+let stars = new THREE.Points(starGeometry, starMaterial);
+scene.add(stars);
 
-geometriaEstrellas.setAttribute('position', new THREE.Float32BufferAttribute(posiciones, 3));
-let materialEstrellas = new THREE.PointsMaterial({ color: 0xff66cc, size: 2 });
-let estrellas = new THREE.Points(geometriaEstrellas, materialEstrellas);
-escena.add(estrellas);
-
-// Sol central
-let materialSol = new THREE.MeshBasicMaterial({ color: 0xffbb00 });
-let sol = new THREE.Mesh(new THREE.SphereGeometry(20, 64, 64), materialSol);
-escena.add(sol);
+// Sol
+let sunMaterial = new THREE.MeshBasicMaterial({ color: 0xffbb00 });
+let sun = new THREE.Mesh(new THREE.SphereGeometry(20, 64, 64), sunMaterial);
+scene.add(sun);
 
 // Texto central
 let canvas = document.createElement('canvas');
@@ -37,14 +34,14 @@ ctx.fillStyle = "#fff";
 ctx.font = "80px Poppins";
 ctx.textAlign = "center";
 ctx.fillText("Sofía, amor de mi vida 💖", 512, 150);
-let texturaTexto = new THREE.CanvasTexture(canvas);
-let materialTexto = new THREE.SpriteMaterial({ map: texturaTexto });
-let spriteTexto = new THREE.Sprite(materialTexto);
-spriteTexto.scale.set(80, 20, 1);
-spriteTexto.position.set(0, 40, 0);
-escena.add(spriteTexto);
+let textTexture = new THREE.CanvasTexture(canvas);
+let textMaterial = new THREE.SpriteMaterial({ map: textTexture });
+let textSprite = new THREE.Sprite(textMaterial);
+textSprite.scale.set(80, 20, 1);
+textSprite.position.set(0, 40, 0);
+scene.add(textSprite);
 
-// Palabras románticas
+// Palabras flotantes
 const palabras = [
   "te amo", "princesa", "colochita", "hermosa", "preciosa", "linda",
   "bella", "guapa", "mi vida", "mi mundo", "te necesito", "mi amor",
@@ -65,21 +62,23 @@ palabras.forEach(() => {
   let s = new THREE.Sprite(m);
   s.position.set((Math.random() - 0.5) * 400, (Math.random() - 0.5) * 400, (Math.random() - 0.5) * 400);
   s.scale.set(40, 10, 1);
-  escena.add(s);
+  scene.add(s);
 });
 
-camara.position.z = 150;
+camera.position.z = 150;
 
-let controles = new OrbitControls(camara, renderizador.domElement);
-controles.enableZoom = true;
-controles.enableDamping = true;
-controles.dampingFactor = 0.1;
+// Controles
+let controls = new THREE.OrbitControls(camera, renderer.domElement);
+controls.enableZoom = true;
+controls.enableDamping = true;
+controls.dampingFactor = 0.1;
 
-function animar() {
-  requestAnimationFrame(animar);
-  sol.rotation.y += 0.005;
-  estrellas.rotation.y += 0.0005;
-  controles.update();
-  renderizador.render(escena, camara);
+function animate() {
+  requestAnimationFrame(animate);
+  sun.rotation.y += 0.005;
+  stars.rotation.y += 0.0005;
+  controls.update();
+  renderer.render(scene, camera);
 }
-animar();
+animate();
+
