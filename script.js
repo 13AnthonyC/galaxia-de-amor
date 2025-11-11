@@ -1,15 +1,28 @@
-// 💖 Galaxia de Amor - creada por Anthony para Sofía 💫
+// Galaxia de Amor — versión estable 🌌
+// Anthony ➜ Sofía 💖
 
-// Configuración básica
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
+camera.position.z = 400;
 
-camera.position.z = 500;
+// Fondo con estrellas básicas
+const starGeo = new THREE.BufferGeometry();
+const starCount = 2000;
+const starPositions = new Float32Array(starCount * 3);
+for (let i = 0; i < starCount * 3; i++) starPositions[i] = (Math.random() - 0.5) * 2000;
+starGeo.setAttribute('position', new THREE.BufferAttribute(starPositions, 3));
+const starMat = new THREE.PointsMaterial({ color: 0xffffff, size: 1 });
+const stars = new THREE.Points(starGeo, starMat);
+scene.add(stars);
 
-// Palabras románticas que serán las "estrellas"
+// Luz suave
+const ambient = new THREE.AmbientLight(0xffffff, 1);
+scene.add(ambient);
+
+// Palabras románticas
 const palabras = [
   "Te amo", "Princesa", "Colochita", "Hermosa", "Preciosa", "Linda",
   "Bella", "Guapa", "Mi vida", "Mi mundo", "Te quiero", "Te necesito",
@@ -17,81 +30,65 @@ const palabras = [
   "Mi corazón", "Mi razón", "Mi todo", "Mi luz", "Amorcito"
 ];
 
-// Cargar fuente y crear estrellas-palabras
+// Cargar fuente y crear textos visibles
 const loader = new THREE.FontLoader();
-loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', function (font) {
-
+loader.load('https://threejs.org/examples/fonts/helvetiker_regular.typeface.json', font => {
   const grupo = new THREE.Group();
   scene.add(grupo);
 
-  for (let i = 0; i < 1000; i++) {
+  for (let i = 0; i < 300; i++) {
     const texto = palabras[Math.floor(Math.random() * palabras.length)];
-    const geometry = new THREE.TextGeometry(texto, {
-      font: font,
-      size: Math.random() * 2 + 1,
-      height: 0.1,
-    });
+    const geo = new THREE.TextGeometry(texto, { font, size: 3, height: 0.2 });
+    const color = new THREE.Color().setHSL(Math.random(), 0.8, 0.7);
+    const mat = new THREE.MeshBasicMaterial({ color });
+    const mesh = new THREE.Mesh(geo, mat);
 
-    const color = new THREE.Color().setHSL(Math.random(), 0.8, 0.8);
-    const material = new THREE.MeshBasicMaterial({ color, transparent: true, opacity: 0.8 });
-    const mesh = new THREE.Mesh(geometry, material);
-
-    const radius = Math.random() * 400 - 200;
+    const r = 300 + Math.random() * 100;
     const theta = Math.random() * 2 * Math.PI;
     const phi = Math.random() * Math.PI;
-
     mesh.position.set(
-      radius * Math.sin(phi) * Math.cos(theta),
-      radius * Math.sin(phi) * Math.sin(theta),
-      radius * Math.cos(phi)
+      r * Math.sin(phi) * Math.cos(theta),
+      r * Math.sin(phi) * Math.sin(theta),
+      r * Math.cos(phi)
     );
-
-    mesh.userData = { baseScale: mesh.scale.clone() };
+    mesh.rotation.y = Math.random() * Math.PI;
+    mesh.rotation.x = Math.random() * Math.PI;
     grupo.add(mesh);
   }
 
-  // Texto central: Sofía, amor de mi vida 💗
-  const geoCentro = new THREE.TextGeometry("Sofía, amor de mi vida, te amo", {
-    font: font,
-    size: 10,
-    height: 1,
-  });
-  const matCentro = new THREE.MeshBasicMaterial({ color: 0xff66cc });
-  const centro = new THREE.Mesh(geoCentro, matCentro);
-  centro.position.set(-80, 0, 0);
+  // Texto central
+  const centroGeo = new THREE.TextGeometry("Sofía, amor de mi vida, te amo", { font, size: 10, height: 1 });
+  const centroMat = new THREE.MeshBasicMaterial({ color: 0xff66cc });
+  const centro = new THREE.Mesh(centroGeo, centroMat);
+  centro.position.set(-120, 0, 0);
   grupo.add(centro);
 
   // Animación
   function animate() {
     requestAnimationFrame(animate);
-    grupo.rotation.y += 0.0008;
-    grupo.rotation.x += 0.0003;
+    grupo.rotation.y += 0.001;
+    grupo.rotation.x += 0.0005;
+    stars.rotation.y += 0.0002;
     renderer.render(scene, camera);
   }
-
   animate();
 
-  // Zoom suave
-  window.addEventListener('wheel', (e) => {
+  // Zoom y clic de color
+  window.addEventListener('wheel', e => {
     camera.position.z += e.deltaY * 0.3;
-    camera.position.z = Math.max(100, Math.min(1000, camera.position.z));
+    camera.position.z = Math.max(100, Math.min(800, camera.position.z));
   });
-
-  // Efecto de clic: cambio de color y tamaño
   window.addEventListener('click', () => {
     grupo.children.forEach(obj => {
-      if (obj.material) {
-        obj.material.color.setHSL(Math.random(), 0.8, 0.8);
-        const s = 0.5 + Math.random() * 1.5;
-        obj.scale.set(s, s, s);
+      if (obj.material && obj.material.color) {
+        obj.material.color.setHSL(Math.random(), 0.8, 0.7);
       }
     });
   });
+});
 
-  // Redimensionar
-  window.addEventListener('resize', () => {
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-  });
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
 });
